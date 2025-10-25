@@ -1,5 +1,6 @@
 package com.wallet.backend.entities;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
@@ -29,13 +30,13 @@ public class Banker {
 
     @NotNull
     @Column(unique = true)
-    private String username; // identifiant pour la connexion
+    private String username;
 
     @NotNull
-    private String passwordHash; // mot de passe hashé
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Password visible seulement à l'écriture
+    private String passwordHash;
 
-
-    // Un banquier peut gérer plusieurs comptes
     @OneToMany(mappedBy = "banker", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Accounts visible seulement à l'écriture
     private List<Account> accounts;
 }

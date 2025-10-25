@@ -1,5 +1,6 @@
 package com.wallet.backend.entities;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
@@ -30,9 +31,10 @@ public class Client {
     private String phone;
     private String address;
 
-    private String passwordHash; // mot de passe principal pour connexion client
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Password visible seulement à l'écriture
+    private String passwordHash;
 
-    // Un client peut avoir plusieurs comptes
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Accounts visible seulement à l'écriture
     private List<Account> accounts;
 }

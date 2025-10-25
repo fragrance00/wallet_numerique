@@ -11,9 +11,12 @@ import java.util.Optional;
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
-    Optional<Account> findByAccountNumber(String accountNumber);
+    // Récupère un compte par son numéro unique
+    Optional<Account> findByAccountNumber(Long accountNumber);
 
-    boolean existsByAccountNumber(String accountNumber);
+    // Vérifie l'existence d'un compte par son numéro
+    boolean existsByAccountNumber(Long accountNumber);
 
+    // Récupère tous les comptes liés à un client
     List<Account> findByClient(Client client);
 }

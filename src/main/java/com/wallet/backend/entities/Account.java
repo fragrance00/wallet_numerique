@@ -1,7 +1,7 @@
 package com.wallet.backend.entities;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.util.List;
 
@@ -17,32 +17,32 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
-    @NotNull
-    private String accountNumber; // RIB ou identifiant bancaire
+    @Column(unique = true, nullable = false)
+    private Long accountNumber;
 
     private double balance;
 
     @ManyToOne
     @JoinColumn(name = "client_id")
-    private Client client; // le propriétaire du compte
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Client visible seulement à l'écriture
+    private Client client;
 
     @ManyToOne
     @JoinColumn(name = "banker_id")
-    private Banker banker; // le banquier qui gère/crée le compte
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Banker visible seulement à l'écriture
+    private Banker banker;
 
-    // Mot de passe spécifique au compte (optionnel pour verrouillage du compte)
     private String passwordHash;
 
-    // Transactions sortantes depuis ce compte
     @OneToMany(mappedBy = "fromAccount", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Transactions visibles seulement à l'écriture
     private List<Transaction> outgoingTransactions;
 
-    // Transactions entrantes vers ce compte
     @OneToMany(mappedBy = "toAccount", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Transactions visibles seulement à l'écriture
     private List<Transaction> incomingTransactions;
 
-    // Crédits liés à ce compte
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Credits visibles seulement à l'écriture
     private List<Credit> credits;
 }
