@@ -19,6 +19,8 @@ public class Transaction {
     private String type; // dépôt, retrait, transfert
     private LocalDateTime timestamp;
 
+    private String location; // Ajout du champ location
+
     @ManyToOne
     @JoinColumn(name = "from_account_id")
     private Account fromAccount; // compte émetteur

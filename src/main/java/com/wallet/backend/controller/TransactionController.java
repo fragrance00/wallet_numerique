@@ -1,5 +1,6 @@
 package com.wallet.backend.controller;
 
+import com.wallet.backend.dto.TransactionsByRibResponse;
 import com.wallet.backend.dto.TransferRequestDTO;
 import com.wallet.backend.dto.TransactionResponse;
 import com.wallet.backend.entities.Transaction;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -53,16 +55,25 @@ public class TransactionController {
         return GlobalSuccessHandler.success("Toutes les transactions récupérées avec succès", responses);
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<GlobalResponse<List<TransactionResponse>>> getTransactionsByRib(@RequestParam Long rib) {
-        List<Transaction> transactions = transactionService.getTransactionsByRib(rib);
-        List<TransactionResponse> responses = transactions.stream()
+    @GetMapping("/search-separated/{rib}")
+    public ResponseEntity<GlobalResponse<TransactionsByRibResponse>> getTransactionsByRibSeparated(
+            @PathVariable Long rib) {
+
+        Map<String, List<Transaction>> transactions = transactionService.getTransactionsByRibSeparated(rib);
+
+        // Convertir en DTOs
+        List<TransactionResponse> envoyees = transactions.get("transactionsEnvoyees").stream()
                 .map(this::mapToTransactionResponse)
                 .toList();
 
-        return GlobalSuccessHandler.success("Transactions trouvées pour le RIB: " + rib, responses);
-    }
+        List<TransactionResponse> recues = transactions.get("transactionsRecues").stream()
+                .map(this::mapToTransactionResponse)
+                .toList();
 
+        TransactionsByRibResponse response = new TransactionsByRibResponse(envoyees, recues);
+
+        return GlobalSuccessHandler.success("Transactions séparées pour le RIB: " + rib, response);
+    }
     @GetMapping("/account/{accountId}")
     public ResponseEntity<GlobalResponse<List<TransactionResponse>>> getTransactionsForAccount(
             @PathVariable Long accountId) {
@@ -75,13 +86,14 @@ public class TransactionController {
         return GlobalSuccessHandler.success("Transactions du compte récupérées avec succès", responses);
     }
 
-    // Méthode de mapping
+    // Méthode de mapping CORRIGÉE
     private TransactionResponse mapToTransactionResponse(Transaction transaction) {
         TransactionResponse response = new TransactionResponse();
         response.setId(transaction.getId());
         response.setAmount(transaction.getAmount());
         response.setType(transaction.getType());
         response.setTimestamp(transaction.getTimestamp().toString());
+        response.setLocation(transaction.getLocation()); // ✅ AJOUTEZ CETTE LIGNE
         response.setFromAccountId(transaction.getFromAccount().getId());
         response.setToAccountId(transaction.getToAccount().getId());
         response.setFromAccountNumber(transaction.getFromAccount().getAccountNumber().toString());

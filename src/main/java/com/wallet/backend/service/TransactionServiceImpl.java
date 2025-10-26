@@ -11,7 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class TransactionServiceImpl implements TransactionService {
@@ -21,6 +24,9 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Autowired
     private AccountRepository accountRepository;
+
+    @Autowired
+    private GeoLocationService geoLocationService;
 
     @Override
     @Transactional
@@ -49,16 +55,24 @@ public class TransactionServiceImpl implements TransactionService {
         accountRepository.save(fromAccount);
         accountRepository.save(toAccount);
 
-        // Créer la transaction
+        // Récupération de la localisation
+        String location = geoLocationService.getClientLocation();
+        System.out.println("📍 Localisation détectée: " + location);
+
+        // Créer la transaction AVEC la localisation
         Transaction transaction = Transaction.builder()
                 .amount(amount)
                 .type("TRANSFERT")
                 .timestamp(LocalDateTime.now())
+                .location(location)
                 .fromAccount(fromAccount)
                 .toAccount(toAccount)
                 .build();
 
-        return transactionRepository.save(transaction);
+        Transaction savedTransaction = transactionRepository.save(transaction);
+        System.out.println("💾 Transaction sauvegardée avec location: " + savedTransaction.getLocation());
+
+        return savedTransaction;
     }
 
     @Override
@@ -71,8 +85,30 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionRepository.findAll();
     }
 
+
     @Override
-    public List<Transaction> getTransactionsByRib(Long rib) {
-        return transactionRepository.findByFromAccount_AccountNumberOrToAccount_AccountNumber(rib, rib);
+    public Map<String, List<Transaction>> getTransactionsByRibSeparated(Long rib) {
+        List<Transaction> allTransactions = transactionRepository.findByFromAccount_AccountNumberOrToAccount_AccountNumber(rib, rib);
+
+        // Séparation en deux groupes
+        List<Transaction> transactionsEnvoyees = allTransactions.stream()
+                .filter(t -> t.getFromAccount().getAccountNumber().equals(rib))
+                .collect(Collectors.toList());
+
+        List<Transaction> transactionsRecues = allTransactions.stream()
+                .filter(t -> t.getToAccount().getAccountNumber().equals(rib))
+                .collect(Collectors.toList());
+
+        Map<String, List<Transaction>> result = new HashMap<>();
+        result.put("transactionsEnvoyees", transactionsEnvoyees);
+        result.put("transactionsRecues", transactionsRecues);
+
+        return result;
+    }
+
+    // ✅ NOUVELLE MÉTHODE POUR TransactionController
+    public Transaction getTransactionById(Long id) {
+        return transactionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Transaction non trouvée avec l'id: " + id));
     }
 }

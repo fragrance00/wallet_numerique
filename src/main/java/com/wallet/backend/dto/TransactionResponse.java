@@ -10,8 +10,7 @@ public class TransactionResponse {
     private double amount;
     private String type;
     private String timestamp;
-    private String location;
-    private String description;
+    private String location; // Suppression de description
     private Long fromAccountId;
     private Long toAccountId;
     private String fromAccountNumber;
