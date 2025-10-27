@@ -1,7 +1,10 @@
 package com.wallet.backend.service;
 
+import com.wallet.backend.entities.Account;
+import com.wallet.backend.entities.Client;
 import com.wallet.backend.entities.Credit;
 import com.wallet.backend.entities.Status;
+import com.wallet.backend.repository.AccountRepository;
 import com.wallet.backend.repository.CreditRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,10 +18,17 @@ public class CreditService {
     @Autowired
     private CreditRepository creditRepository;
 
+    /*@Autowired
+    private final AccountRepository accountRepository;*/
+
+
+
     // 🔹 Créer une demande de crédit
-    public Credit createCreditRequest(Credit credit) {
-        credit.setRequestDate(LocalDateTime.now());
-        credit.setStatus(Status.PENDING); // par défaut en attente
+    public Credit createCreditRequest(Credit credit/*,Long accountId*/) {
+        /*Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Compte introuvable"));
+
+        credit.setAccount(account);*/
         return creditRepository.save(credit);
     }
 
@@ -26,6 +36,12 @@ public class CreditService {
     public List<Credit> getAllCredits() {
         return creditRepository.findAll();
     }
+
+    //Lister tous les crédits avec statut spécifique
+    public List<Credit> getCreditsByStatus(Status status) {
+        return creditRepository.findByStatus(status);
+    }
+
 
     // 🔹 Modifier le statut du crédit
     public Credit updateCreditStatus(Long id, Status status) {
@@ -35,6 +51,17 @@ public class CreditService {
         return creditRepository.save(credit);
     }
 
+    //Lister les crédits d’un compte spécifique
+    public List<Credit> getCreditsByAccount(Long accountId) {
+        return creditRepository.findByAccountId(accountId);
+    }
+
+    //Obtenir les infos du client ayant fait la demande
+    public Client getClientByCredit(Long creditId) {
+        Credit credit = creditRepository.findById(creditId)
+                .orElseThrow(() -> new RuntimeException("Crédit introuvable"));
+        return credit.getAccount().getClient();
+    }
     // 🔹 Supprimer une demande
     public void deleteCredit(Long id) {
         creditRepository.deleteById(id);
