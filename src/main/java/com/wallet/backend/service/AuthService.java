@@ -1,13 +1,10 @@
 package com.wallet.backend.service;
 
-import com.wallet.backend.config.SecurityConfig;
 import com.wallet.backend.dto.AuthResponse;
 import com.wallet.backend.dto.LoginRequest;
 import com.wallet.backend.dto.SignupRequest;
-import com.wallet.backend.entities.Admin;
 import com.wallet.backend.entities.Banker;
 import com.wallet.backend.entities.Client;
-import com.wallet.backend.repository.AdminRepository;
 import com.wallet.backend.repository.BankerRepository;
 import com.wallet.backend.repository.ClientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,9 +17,6 @@ import java.util.ArrayList;
 @Service
 @Transactional
 public class AuthService {
-
-    @Autowired
-    private AdminRepository adminRepository;
 
     @Autowired
     private BankerRepository bankerRepository;
@@ -39,7 +33,6 @@ public class AuthService {
     public AuthResponse authenticate(LoginRequest loginRequest) {
         String username = loginRequest.getUsername();
         String password = loginRequest.getPassword();
-        String userType = loginRequest.getUserType();
 
         Object user = null;
         String userRole = "";
@@ -48,53 +41,35 @@ public class AuthService {
         String userFirstName = "";
         String userLastName = "";
 
-        switch (userType.toUpperCase()) {
-            case "ADMIN":
-                Admin admin = adminRepository.findByUsername(username)
-                        .orElseThrow(() -> new RuntimeException("Admin not found"));
-                if (!passwordEncoder.matches(password, admin.getPasswordHash())) {
-                    throw new RuntimeException("Invalid password");
-                }
-                user = admin;
-                userRole = "ADMIN";
-                userId = admin.getId();
-                userEmail = admin.getEmail();
-                userFirstName = admin.getFirstName();
-                userLastName = admin.getLastName();
-                break;
-
-            case "BANKER":
-                Banker banker = bankerRepository.findByUsername(username)
-                        .orElseThrow(() -> new RuntimeException("Banker not found"));
-                if (!passwordEncoder.matches(password, banker.getPasswordHash())) {
-                    throw new RuntimeException("Invalid password");
-                }
-                user = banker;
-                userRole = "BANKER";
-                userId = banker.getId();
-                userEmail = banker.getEmail();
-                userFirstName = banker.getFirstName();
-                userLastName = banker.getLastName();
-                break;
-
-            case "CLIENT":
-                Client client = clientRepository.findByEmail(username)
-                        .orElseThrow(() -> new RuntimeException("Client not found"));
-                if (!passwordEncoder.matches(password, client.getPasswordHash())) {
-                    throw new RuntimeException("Invalid password");
-                }
+        // 🔍 CHERCHE DANS BANKER D'ABORD
+        Banker banker = bankerRepository.findByUsername(username).orElse(null);
+        if (banker != null && passwordEncoder.matches(password, banker.getPasswordHash())) {
+            user = banker;
+            userRole = banker.getRole(); // "SUPER_ADMIN" ou "BANKER"
+            userId = banker.getId();
+            userEmail = banker.getEmail();
+            userFirstName = banker.getFirstName();
+            userLastName = banker.getLastName();
+        }
+        // 🔍 SI PAS BANKER, CHERCHE DANS CLIENT
+        else {
+            Client client = clientRepository.findByEmail(username).orElse(null);
+            if (client != null && passwordEncoder.matches(password, client.getPasswordHash())) {
                 user = client;
                 userRole = "CLIENT";
                 userId = client.getId();
                 userEmail = client.getEmail();
                 userFirstName = client.getFirstName();
                 userLastName = client.getLastName();
-                break;
-
-            default:
-                throw new RuntimeException("Invalid user type");
+            }
         }
 
+        // ❌ SI AUCUN UTILISATEUR TROUVÉ
+        if (user == null) {
+            throw new RuntimeException("Invalid username or password");
+        }
+
+        // ✅ GÉNÈRE LE TOKEN
         String token = jwtService.generateToken(username, userRole, userId);
 
         return AuthResponse.builder()
@@ -135,6 +110,7 @@ public class AuthService {
                 .email(request.getEmail())
                 .username(request.getUsername())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .role("BANKER") // 👨‍💼 Nouveaux bankers = rôle normal
                 .accounts(new ArrayList<>())
                 .build();
 

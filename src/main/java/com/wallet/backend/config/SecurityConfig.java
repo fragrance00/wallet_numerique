@@ -21,17 +21,16 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
-
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Autowired
     private JwtAuthFilter jwtAuthFilter;
 
     @Autowired
-    private CustomUserDetailsService userDetailsService;
+    private CustomUserDetailsService customUserDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -40,9 +39,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/banker/**").hasAnyRole("BANKER", "ADMIN")
-                        .requestMatchers("/api/client/**").hasAnyRole("CLIENT", "BANKER", "ADMIN")
+                        .requestMatchers("/h2-console/**").permitAll()
+                        // 👑 SUPER_ADMIN peut tout faire
+                        .requestMatchers("/api/bankers/**").hasAnyRole("SUPER_ADMIN", "BANKER")
+                        // 👤 CLIENT accès limité
+                        .requestMatchers("/api/clients/**").hasAnyRole("CLIENT", "BANKER", "SUPER_ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
@@ -62,7 +63,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setUserDetailsService(customUserDetailsService); // ← CORRIGÉ
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }

@@ -26,6 +26,7 @@ public class Banker {
     private String lastName;
 
     @Email
+    @Column(unique = true)
     private String email;
 
     @NotNull
@@ -33,10 +34,13 @@ public class Banker {
     private String username;
 
     @NotNull
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Password visible seulement à l'écriture
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String passwordHash;
 
     @OneToMany(mappedBy = "banker", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Accounts visible seulement à l'écriture
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private List<Account> accounts;
+
+    // 👑 Champ pour distinguer les rôles parmi les bankers
+    private String role = "BANKER"; // Peut être "SUPER_ADMIN" ou "BANKER"
 }

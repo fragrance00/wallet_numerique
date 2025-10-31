@@ -1,9 +1,7 @@
 package com.wallet.backend.service;
 
-import com.wallet.backend.entities.Admin;
 import com.wallet.backend.entities.Banker;
 import com.wallet.backend.entities.Client;
-import com.wallet.backend.repository.AdminRepository;
 import com.wallet.backend.repository.BankerRepository;
 import com.wallet.backend.repository.ClientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +19,6 @@ import java.util.Optional;
 public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
-    private AdminRepository adminRepository;
-
-    @Autowired
     private BankerRepository bankerRepository;
 
     @Autowired
@@ -31,34 +26,26 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Chercher dans toutes les tables
-        Optional<Admin> admin = adminRepository.findByUsername(username);
-        if (admin.isPresent()) {
+        // Chercher d'abord dans Banker
+        Banker banker = bankerRepository.findByUsername(username).orElse(null);
+        if (banker != null) {
             return User.builder()
-                    .username(admin.get().getUsername())
-                    .password(admin.get().getPasswordHash())
-                    .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                    .username(banker.getUsername())
+                    .password(banker.getPasswordHash())
+                    .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + banker.getRole())))
                     .build();
         }
 
-        Optional<Banker> banker = bankerRepository.findByUsername(username);
-        if (banker.isPresent()) {
+        // Si pas banker, chercher dans Client
+        Client client = clientRepository.findByEmail(username).orElse(null);
+        if (client != null) {
             return User.builder()
-                    .username(banker.get().getUsername())
-                    .password(banker.get().getPasswordHash())
-                    .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_BANKER")))
-                    .build();
-        }
-
-        Optional<Client> client = clientRepository.findByEmail(username);
-        if (client.isPresent()) {
-            return User.builder()
-                    .username(client.get().getEmail())
-                    .password(client.get().getPasswordHash())
+                    .username(client.getEmail())
+                    .password(client.getPasswordHash())
                     .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_CLIENT")))
                     .build();
         }
 
-        throw new UsernameNotFoundException("User not found with username/email: " + username);
+        throw new UsernameNotFoundException("User not found: " + username);
     }
 }
