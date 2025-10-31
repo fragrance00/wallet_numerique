@@ -21,4 +21,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     // Trouver les transactions d'un compte spécifique avec jointure
     @Query("SELECT t FROM Transaction t WHERE t.fromAccount.id = :accountId OR t.toAccount.id = :accountId ORDER BY t.timestamp DESC")
     List<Transaction> findTransactionsByAccountId(@Param("accountId") Long accountId);
+
+    //trouver les transaction arive a un comtpe
+    List<Transaction> findByToAccount_Id(Long accountId);
 }

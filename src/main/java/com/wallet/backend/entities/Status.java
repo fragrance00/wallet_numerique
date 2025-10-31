@@ -4,5 +4,6 @@ package com.wallet.backend.entities;
 public enum Status {
     PENDING,    // en attente de validation
     APPROVED,   // validé par le banquier
-    REJECTED    // refusé
+    REJECTED,   // refusé
+    REALIZED
 }

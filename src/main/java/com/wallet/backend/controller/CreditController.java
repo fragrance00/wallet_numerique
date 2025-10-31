@@ -1,128 +1,125 @@
 package com.wallet.backend.controller;
 
-import com.wallet.backend.entities.Client;
-import com.wallet.backend.entities.Credit;
+import com.wallet.backend.dto.CreditRequestDTO;
+import com.wallet.backend.dto.CreditResponseDTO;
+import com.wallet.backend.entities.Banker;
 import com.wallet.backend.entities.Status;
-import com.wallet.backend.service.CreditService;
-import jakarta.servlet.http.HttpSession;
+import com.wallet.backend.interfaces.CreditService;
+import com.wallet.backend.repository.BankerRepository;
+import com.wallet.backend.shared.GlobalResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/credits")
-@CrossOrigin(origins = "*")
 public class CreditController {
 
+    private final CreditService creditService;
+
     @Autowired
-    private CreditService creditService;
-
-    // 🟢 Créer une demande de crédit
-    @PostMapping
-    public ResponseEntity<Credit> createCredit(
-            @RequestBody Credit credit,
-            @RequestPart(value = "file", required = false) MultipartFile file/*, HttpSession session*/
-    ) throws IOException {
-
-        // Dossier d’upload local (peut être changé plus tard pour S3)
-        /*String uploadDir = "uploads/";
-        File dir = new File(uploadDir);
-        if (!dir.exists()) dir.mkdirs();
-
-        // Sauvegarde du fichier si présent
-        if (file != null && !file.isEmpty()) {
-            String filePath = uploadDir + file.getOriginalFilename();
-            file.transferTo(new File(filePath));
-            credit.setDocuments(filePath);
-        }*/
-
-        // Date et statut IdAccount définis automatiquement
-        credit.setRequestDate(java.time.LocalDateTime.now());
-        credit.setStatus(Status.PENDING);
-        /*Long accountId = (Long) session.getAttribute("accountId");*/
-
-        Credit saved = creditService.createCreditRequest(credit/*,accountId*/);
-        return ResponseEntity.ok(saved);
+    public CreditController(CreditService creditService) {
+        this.creditService = creditService;
     }
 
+    @Autowired
+    private BankerRepository bankerRepository;
 
-    // 🔵 Récupérer toutes les demandes
+    // 🔹 Créer un crédit
+    @PostMapping("/create/{accountId}")
+    public ResponseEntity<GlobalResponse<CreditResponseDTO>> createCredit(
+            @PathVariable Long accountId,
+            @Valid @RequestBody CreditRequestDTO request) {
+
+        CreditResponseDTO created = creditService.createCredit(request, accountId);
+        GlobalResponse<CreditResponseDTO> response =
+                new GlobalResponse<>(true, "Crédit créé avec succès", created);
+
+        return ResponseEntity.ok(response);
+    }
+
+    // 🔹 Récupérer tous les crédits
     @GetMapping
-    public ResponseEntity<List<Credit>> getAllCredits() {
-        return ResponseEntity.ok(creditService.getAllCredits());
+    public ResponseEntity<GlobalResponse<List<CreditResponseDTO>>> getAllCredits() {
+        List<CreditResponseDTO> credits = creditService.getAllCredits();
+        GlobalResponse<List<CreditResponseDTO>> response =
+                new GlobalResponse<>(true, "Liste de tous les crédits récupérée", credits);
+
+        return ResponseEntity.ok(response);
     }
 
-    //Lister tous les crédits en cours (PENDING)
-    @GetMapping("/pending")
-    public ResponseEntity<List<Credit>> getPendingCredits() {
-        return ResponseEntity.ok(creditService.getCreditsByStatus(Status.PENDING));
+    // 🔹 Récupérer un crédit par ID
+    @GetMapping("/{id}")
+    public ResponseEntity<GlobalResponse<CreditResponseDTO>> getCreditById(@PathVariable Long id) {
+        CreditResponseDTO credit = creditService.getCreditById(id);
+        GlobalResponse<CreditResponseDTO> response =
+                new GlobalResponse<>(true, "Crédit trouvé", credit);
+
+        return ResponseEntity.ok(response);
     }
 
-    // 🟠 Modifier le statut d'une demande
-    //exemple de requete HTTP "http://localhost:8080/api/credits/1/status?status=APPROVED"
+    // 🔹 Mettre à jour le statut d’un crédit
     @PutMapping("/{id}/status")
-    public ResponseEntity<Credit> updateCreditStatus(
+    public ResponseEntity<GlobalResponse<CreditResponseDTO>> updateStatus(
             @PathVariable Long id,
             @RequestParam Status status) {
-        return ResponseEntity.ok(creditService.updateCreditStatus(id, status));
+
+        CreditResponseDTO updated = creditService.updateCreditStatus(id, status);
+        GlobalResponse<CreditResponseDTO> response =
+                new GlobalResponse<>(true, "Statut du crédit mis à jour avec succès", updated);
+
+        return ResponseEntity.ok(response);
     }
 
-    // getCredits By Account
-    //http://localhost:8080/api/credits/account/6
+    // 🔹 Récupérer les crédits selon le statut
+    @GetMapping("/status/{status}")
+    public ResponseEntity<GlobalResponse<List<CreditResponseDTO>>> getCreditsByStatus(
+            @PathVariable Status status) {
+
+        List<CreditResponseDTO> credits = creditService.getCreditsByStatus(status);
+        GlobalResponse<List<CreditResponseDTO>> response =
+                new GlobalResponse<>(true, "Crédits avec le statut " + status + " récupérés", credits);
+
+        return ResponseEntity.ok(response);
+    }
+
+    // 🔹 Récupérer les crédits d’un compte
     @GetMapping("/account/{accountId}")
-    public ResponseEntity<List<Credit>> getCreditsByAccount(@PathVariable Long accountId) {
-        return ResponseEntity.ok(creditService.getCreditsByAccount(accountId));
+    public ResponseEntity<GlobalResponse<List<CreditResponseDTO>>> getCreditsByAccount(
+            @PathVariable Long accountId) {
+
+        List<CreditResponseDTO> credits = creditService.getCreditsByAccount(accountId);
+        GlobalResponse<List<CreditResponseDTO>> response =
+                new GlobalResponse<>(true, "Crédits du compte récupérés", credits);
+
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{creditId}/client")
-    public ResponseEntity<Client> getClientByCredit(@PathVariable Long creditId) {
-        return ResponseEntity.ok(creditService.getClientByCredit(creditId));
-    }
-
-    //Supprimer une demande
-    //http://localhost:8080/api/credits/1/client
+    // 🔹 Supprimer un crédit
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCredit(@PathVariable Long id) {
+    public ResponseEntity<GlobalResponse<Void>> deleteCredit(@PathVariable Long id) {
         creditService.deleteCredit(id);
-        return ResponseEntity.noContent().build();
+        GlobalResponse<Void> response =
+                new GlobalResponse<>(true, "Crédit supprimé avec succès");
+
+        return ResponseEntity.ok(response);
     }
 
-    // affichage de PDF
-    /*@GetMapping("/view/{id}")
-public ResponseEntity<Void> viewCreditDocument(@PathVariable Long id) {
-    Credit credit = creditService.getCreditById(id);
+    @GetMapping("/banker/{bankerId}")
+    public ResponseEntity<GlobalResponse<List<CreditResponseDTO>>> getCreditsByBanker(
+            @PathVariable Long bankerId) {
 
-    // Vérifie que le document existe
-    if (credit.getDocuments() == null || credit.getDocuments().isEmpty()) {
-        return ResponseEntity.notFound().build();
+        // Récupérer le banker (tu peux utiliser un BankerRepository)
+        Banker banker = bankerRepository.findById(bankerId)
+                .orElseThrow(() -> new IllegalArgumentException("Banquier introuvable avec ID: " + bankerId));
+
+        List<CreditResponseDTO> credits = creditService.getCreditsByBanker(banker);
+        GlobalResponse<List<CreditResponseDTO>> response =
+                new GlobalResponse<>(true, "Crédits du banquier récupérés", credits);
+
+        return ResponseEntity.ok(response);
     }
-
-    // Redirection vers le lien du document stocké (S3 ou autre cloud)
-    return ResponseEntity
-            .status(302) // Code HTTP de redirection
-            .header("Location", credit.getDocuments())
-            .build();
-}
-*/
-    /*@GetMapping("/view/{id}")
-public ResponseEntity<Void> viewCreditDocument(@PathVariable Long id) {
-    Credit credit = creditService.getCreditById(id);
-
-    // Vérifie que le document existe
-    if (credit.getDocuments() == null || credit.getDocuments().isEmpty()) {
-        return ResponseEntity.notFound().build();
-    }
-
-    // Redirection vers le lien du document stocké (S3 ou autre cloud)
-    return ResponseEntity
-            .status(302) // Code HTTP de redirection
-            .header("Location", credit.getDocuments())
-            .build();
-}
-*/
 }

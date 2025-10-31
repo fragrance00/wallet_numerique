@@ -5,6 +5,7 @@ import com.wallet.backend.dto.TransferRequestDTO;
 import com.wallet.backend.dto.TransactionResponse;
 import com.wallet.backend.entities.Transaction;
 import com.wallet.backend.interfaces.TransactionService;
+import com.wallet.backend.service.TransactionServiceImpl;
 import com.wallet.backend.shared.Exceptions.GlobalSuccessHandler;
 import com.wallet.backend.shared.GlobalResponse;
 import jakarta.validation.Valid;
@@ -21,6 +22,9 @@ public class TransactionController {
 
     @Autowired
     private TransactionService transactionService;
+
+    @Autowired
+    private TransactionServiceImpl transactionServiceImp;
 
     @PostMapping("/transfer")
     public ResponseEntity<GlobalResponse<TransactionResponse>> createTransfer(
@@ -105,4 +109,5 @@ public class TransactionController {
 
         return response;
     }
+
 }

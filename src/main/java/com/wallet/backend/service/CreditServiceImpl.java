@@ -1,6 +1,9 @@
 package com.wallet.backend.service;
 
+import com.wallet.backend.dto.CreditRequestDTO;
+import com.wallet.backend.dto.CreditResponseDTO;
 import com.wallet.backend.entities.*;
+import com.wallet.backend.interfaces.CreditService;
 import com.wallet.backend.repository.AccountRepository;
 import com.wallet.backend.repository.CreditRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,64 +13,103 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-public class CreditService {
+public class CreditServiceImpl implements CreditService {
 
     @Autowired
-    private CreditRepository creditRepository;
-
-    /*@Autowired
-    private final AccountRepository accountRepository;*/
-
-
-
-    // 🔹 Créer une demande de crédit
-    public Credit createCreditRequest(Credit credit/*,Long accountId*/) {
-        /*Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new RuntimeException("Compte introuvable"));
-
-        credit.setAccount(account);*/
-        return creditRepository.save(credit);
+    private final CreditRepository creditRepository;
+    @Autowired
+    private final AccountRepository accountRepository;
+    @Autowired
+    public CreditServiceImpl(CreditRepository creditRepository, AccountRepository accountRepository) {
+        this.creditRepository = creditRepository;
+        this.accountRepository = accountRepository;
     }
 
-    // 🔹 Récupérer toutes les demandes
-    public List<Credit> getAllCredits() {
-        return creditRepository.findAll();
+    @Override
+    public CreditResponseDTO createCredit(CreditRequestDTO creditRequest, Long accountId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Compte introuvable pour l'ID: " + accountId));
+
+        Credit credit = Credit.builder()
+                .amount(creditRequest.getAmount())
+                .purpose(creditRequest.getPurpose())
+                .documents(creditRequest.getDocuments())
+                .status(Status.PENDING)
+                .requestDate(LocalDateTime.now())
+                .account(account)
+                .build();
+
+        Credit savedCredit = creditRepository.save(credit);
+        return mapToDTO(savedCredit);
     }
 
-    //Lister tous les crédits avec statut spécifique
-    public List<Credit> getCreditsByStatus(Status status) {
-        return creditRepository.findByStatus(status);
+    @Override
+    public List<CreditResponseDTO> getAllCredits() {
+        return creditRepository.findAll()
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
     }
 
-
-    // 🔹 Modifier le statut du crédit
-    public Credit updateCreditStatus(Long id, Status status) {
+    @Override
+    public CreditResponseDTO getCreditById(Long id) {
         Credit credit = creditRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Crédit non trouvé"));
+                .orElseThrow(() -> new IllegalArgumentException("Crédit introuvable avec ID: " + id));
+        return mapToDTO(credit);
+    }
+
+    @Override
+    public CreditResponseDTO updateCreditStatus(Long id, Status status) {
+        Credit credit = creditRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Crédit introuvable avec ID: " + id));
         credit.setStatus(status);
-        return creditRepository.save(credit);
+        Credit updated = creditRepository.save(credit);
+        return mapToDTO(updated);
     }
 
-    //Lister les crédits d’un compte spécifique
-    public List<Credit> getCreditsByAccount(Long accountId) {
-        return creditRepository.findByAccountId(accountId);
+    @Override
+    public List<CreditResponseDTO> getCreditsByStatus(Status status) {
+        return creditRepository.findByStatus(status)
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
     }
 
-
-
-    // Crédits réalisés selon le banker
-    public List<Credit> getCreditsByBanker(Banker banker) {
-        return creditRepository.findByBanker(banker);
+    @Override
+    public List<CreditResponseDTO> getCreditsByAccount(Long accountId) {
+        return creditRepository.findByAccountId(accountId)
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
     }
 
-    //Obtenir les infos du client ayant fait la demande
-    public Client getClientByCredit(Long creditId) {
-        Credit credit = creditRepository.findById(creditId)
-                .orElseThrow(() -> new RuntimeException("Crédit introuvable"));
-        return credit.getAccount().getClient();
-    }
-    // 🔹 Supprimer une demande
+    @Override
     public void deleteCredit(Long id) {
+        if (!creditRepository.existsById(id)) {
+            throw new IllegalArgumentException("Crédit introuvable avec ID: " + id);
+        }
         creditRepository.deleteById(id);
+    }
+
+    private CreditResponseDTO mapToDTO(Credit credit) {
+        return CreditResponseDTO.builder()
+                .id(credit.getId())
+                .amount(credit.getAmount())
+                .purpose(credit.getPurpose())
+                .documents(credit.getDocuments())
+                .requestDate(credit.getRequestDate())
+                .status(credit.getStatus().name())
+                .accountNumber(credit.getAccount().getAccountNumber())
+                .clientFirstName(credit.getAccount().getClient().getFirstName())
+                .clientLastName(credit.getAccount().getClient().getLastName())
+                .build();
+    }
+
+    @Override
+    public List<CreditResponseDTO> getCreditsByBanker(Banker banker) {
+        return creditRepository.findByBanker(banker)
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
     }
 }
