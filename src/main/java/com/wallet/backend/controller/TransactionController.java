@@ -33,6 +33,9 @@ public class TransactionController {
         return GlobalSuccessHandler.created("Transfert effectué avec succès", response);
     }
 
+
+
+    //banker_search_transaction_by_rib
     @GetMapping("/my-transactions")
     public ResponseEntity<GlobalResponse<List<TransactionResponse>>> getMyTransactions(
             @RequestParam Long accountId) {
@@ -55,13 +58,12 @@ public class TransactionController {
         return GlobalSuccessHandler.success("Toutes les transactions récupérées avec succès", responses);
     }
 
+    //
     @GetMapping("/search-separated/{rib}")
     public ResponseEntity<GlobalResponse<TransactionsByRibResponse>> getTransactionsByRibSeparated(
             @PathVariable Long rib) {
 
         Map<String, List<Transaction>> transactions = transactionService.getTransactionsByRibSeparated(rib);
-
-        // Convertir en DTOs
         List<TransactionResponse> envoyees = transactions.get("transactionsEnvoyees").stream()
                 .map(this::mapToTransactionResponse)
                 .toList();
@@ -71,20 +73,22 @@ public class TransactionController {
                 .toList();
 
         TransactionsByRibResponse response = new TransactionsByRibResponse(envoyees, recues);
-
         return GlobalSuccessHandler.success("Transactions séparées pour le RIB: " + rib, response);
     }
+
+
+    //les transactions virements d'un compte dans son espace client
     @GetMapping("/account/{accountId}")
     public ResponseEntity<GlobalResponse<List<TransactionResponse>>> getTransactionsForAccount(
             @PathVariable Long accountId) {
-
         List<Transaction> transactions = transactionService.getTransactionsByAccount(accountId);
         List<TransactionResponse> responses = transactions.stream()
                 .map(this::mapToTransactionResponse)
                 .toList();
-
         return GlobalSuccessHandler.success("Transactions du compte récupérées avec succès", responses);
     }
+
+
 
     // Méthode de mapping CORRIGÉE
     private TransactionResponse mapToTransactionResponse(Transaction transaction) {

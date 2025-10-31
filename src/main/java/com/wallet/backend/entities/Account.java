@@ -45,4 +45,6 @@ public class Account {
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Credits visibles seulement à l'écriture
     private List<Credit> credits;
+
+
 }
