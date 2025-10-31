@@ -1,9 +1,6 @@
 package com.wallet.backend.service;
 
-import com.wallet.backend.entities.Account;
-import com.wallet.backend.entities.Client;
-import com.wallet.backend.entities.Credit;
-import com.wallet.backend.entities.Status;
+import com.wallet.backend.entities.*;
 import com.wallet.backend.repository.AccountRepository;
 import com.wallet.backend.repository.CreditRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +51,13 @@ public class CreditService {
     //Lister les crédits d’un compte spécifique
     public List<Credit> getCreditsByAccount(Long accountId) {
         return creditRepository.findByAccountId(accountId);
+    }
+
+
+
+    // Crédits réalisés selon le banker
+    public List<Credit> getCreditsByBanker(Banker banker) {
+        return creditRepository.findByBanker(banker);
     }
 
     //Obtenir les infos du client ayant fait la demande
