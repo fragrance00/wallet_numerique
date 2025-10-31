@@ -111,4 +111,9 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Transaction non trouvée avec l'id: " + id));
     }
+
+    // Récupérer toutes les transactions reçues par un compte
+    public List<Transaction> getReceivedTransactions(Long accountId) {
+        return transactionRepository.findByToAccount_Id(accountId);
+    }
 }

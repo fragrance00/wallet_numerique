@@ -11,4 +11,7 @@ public interface TransactionService {
     List<Transaction> getAllTransactions();
 
     Map<String, List<Transaction>> getTransactionsByRibSeparated(Long rib);
+
+    public List<Transaction> getReceivedTransactions(Long accountId);
+
 }
