@@ -33,9 +33,9 @@ public class Banker {
     @Column(unique = true)
     private String username;
 
+    // ⚠️ CHANGEMENT : passwordHash → password (stockage en clair)
     @NotNull
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private String passwordHash;
+    private String password; // Maintenant en clair
 
     @OneToMany(mappedBy = "banker", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)

@@ -2,6 +2,7 @@ package com.wallet.backend.controller;
 
 import com.wallet.backend.entities.Banker;
 import com.wallet.backend.service.BankerService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class BankerController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','BANKER')")
     public List<Banker> getAllBankers() {
         return bankerService.getAllBankers();
     }

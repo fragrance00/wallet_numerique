@@ -35,7 +35,8 @@ public class BankerService {
         existing.setLastName(updatedBanker.getLastName());
         existing.setEmail(updatedBanker.getEmail());
         existing.setUsername(updatedBanker.getUsername());
-        existing.setPasswordHash(updatedBanker.getPasswordHash());
+        existing.setPassword(updatedBanker.getPassword()); // ⚠️ CHANGEMENT : passwordHash → password
+        existing.setRole(updatedBanker.getRole()); // Ajoutez cette ligne
         return bankerRepository.save(existing);
     }
 

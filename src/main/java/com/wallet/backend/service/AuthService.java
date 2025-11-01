@@ -31,7 +31,7 @@ public class AuthService {
     private JwtService jwtService;
 
     public AuthResponse authenticate(LoginRequest loginRequest) {
-        String username = loginRequest.getUsername();
+        String email = loginRequest.getUsername(); // ⭐ Maintenant c'est l'email pour tous
         String password = loginRequest.getPassword();
 
         Object user = null;
@@ -40,37 +40,40 @@ public class AuthService {
         String userEmail = "";
         String userFirstName = "";
         String userLastName = "";
+        String username = "";
 
-        // 🔍 CHERCHE DANS BANKER D'ABORD
-        Banker banker = bankerRepository.findByUsername(username).orElse(null);
-        if (banker != null && passwordEncoder.matches(password, banker.getPasswordHash())) {
+        // 🔍 CHERCHE DANS BANKER par EMAIL
+        Banker banker = bankerRepository.findByEmail(email).orElse(null);
+        if (banker != null && passwordEncoder.matches(password, banker.getPassword())) {
             user = banker;
-            userRole = banker.getRole(); // "SUPER_ADMIN" ou "BANKER"
+            userRole = banker.getRole();
             userId = banker.getId();
             userEmail = banker.getEmail();
             userFirstName = banker.getFirstName();
             userLastName = banker.getLastName();
+            username = banker.getUsername();
         }
-        // 🔍 SI PAS BANKER, CHERCHE DANS CLIENT
+        // 🔍 SI PAS BANKER, CHERCHE DANS CLIENT par EMAIL
         else {
-            Client client = clientRepository.findByEmail(username).orElse(null);
-            if (client != null && passwordEncoder.matches(password, client.getPasswordHash())) {
+            Client client = clientRepository.findByEmail(email).orElse(null);
+            if (client != null && passwordEncoder.matches(password, client.getPassword())) {
                 user = client;
                 userRole = "CLIENT";
                 userId = client.getId();
                 userEmail = client.getEmail();
                 userFirstName = client.getFirstName();
                 userLastName = client.getLastName();
+                username = client.getEmail();
             }
         }
 
         // ❌ SI AUCUN UTILISATEUR TROUVÉ
         if (user == null) {
-            throw new RuntimeException("Invalid username or password");
+            throw new RuntimeException("Invalid email or password");
         }
 
         // ✅ GÉNÈRE LE TOKEN
-        String token = jwtService.generateToken(username, userRole, userId);
+        String token = jwtService.generateToken(email, userRole, userId);
 
         return AuthResponse.builder()
                 .token(token)
@@ -109,15 +112,15 @@ public class AuthService {
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .username(request.getUsername())
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .role("BANKER") // 👨‍💼 Nouveaux bankers = rôle normal
+                .password(request.getPassword()) // En clair
+                .role("BANKER")
                 .accounts(new ArrayList<>())
                 .build();
 
         Banker savedBanker = bankerRepository.save(banker);
 
         String token = jwtService.generateToken(
-                request.getUsername(),
+                request.getEmail(), // ⭐ Utilise l'email pour le token
                 "BANKER",
                 savedBanker.getId()
         );
@@ -144,14 +147,14 @@ public class AuthService {
                 .email(request.getEmail())
                 .phone(request.getPhone())
                 .address(request.getAddress())
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .password(request.getPassword()) // En clair
                 .accounts(new ArrayList<>())
                 .build();
 
         Client savedClient = clientRepository.save(client);
 
         String token = jwtService.generateToken(
-                request.getEmail(),
+                request.getEmail(), // ⭐ Utilise l'email pour le token
                 "CLIENT",
                 savedClient.getId()
         );

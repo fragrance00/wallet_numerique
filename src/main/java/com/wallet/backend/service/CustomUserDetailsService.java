@@ -13,7 +13,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
-import java.util.Optional;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -25,27 +24,28 @@ public class CustomUserDetailsService implements UserDetailsService {
     private ClientRepository clientRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Chercher d'abord dans Banker
-        Banker banker = bankerRepository.findByUsername(username).orElse(null);
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+
+        // Chercher d'abord dans Banker par EMAIL
+        Banker banker = bankerRepository.findByEmail(email).orElse(null);
         if (banker != null) {
             return User.builder()
-                    .username(banker.getUsername())
-                    .password(banker.getPasswordHash())
+                    .username(banker.getEmail()) // ⭐ Utilise l'email comme username Spring
+                    .password(banker.getPassword())
                     .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + banker.getRole())))
                     .build();
         }
 
-        // Si pas banker, chercher dans Client
-        Client client = clientRepository.findByEmail(username).orElse(null);
+        // Si pas banker, chercher dans Client par EMAIL
+        Client client = clientRepository.findByEmail(email).orElse(null);
         if (client != null) {
             return User.builder()
                     .username(client.getEmail())
-                    .password(client.getPasswordHash())
+                    .password(client.getPassword())
                     .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_CLIENT")))
                     .build();
         }
 
-        throw new UsernameNotFoundException("User not found: " + username);
+        throw new UsernameNotFoundException("User not found with email: " + email);
     }
 }

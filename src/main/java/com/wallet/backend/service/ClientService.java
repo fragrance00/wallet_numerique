@@ -37,6 +37,7 @@ public class ClientService {
                     client.setEmail(updatedClient.getEmail());
                     client.setPhone(updatedClient.getPhone());
                     client.setAddress(updatedClient.getAddress());
+                    client.setPassword(updatedClient.getPassword()); // ⚠️ CHANGEMENT : ajoutez cette ligne
                     return clientRepository.save(client);
                 })
                 .orElseThrow(() -> new RuntimeException("Client non trouvé"));

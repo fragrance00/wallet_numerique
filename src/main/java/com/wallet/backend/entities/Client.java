@@ -31,10 +31,10 @@ public class Client {
     private String phone;
     private String address;
 
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Password visible seulement à l'écriture
-    private String passwordHash;
+    // ⚠️ CHANGEMENT : passwordHash → password (stockage en clair)
+    private String password; // Maintenant en clair
 
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Accounts visible seulement à l'écriture
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private List<Account> accounts;
 }

@@ -24,27 +24,26 @@ public class Account {
 
     @ManyToOne
     @JoinColumn(name = "client_id")
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Client visible seulement à l'écriture
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Client client;
 
     @ManyToOne
     @JoinColumn(name = "banker_id")
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Banker visible seulement à l'écriture
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Banker banker;
 
-    private String passwordHash;
+    // ⚠️ CHANGEMENT : passwordHash → password (stockage en clair)
+    private String password; // Maintenant en clair
 
     @OneToMany(mappedBy = "fromAccount", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Transactions visibles seulement à l'écriture
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private List<Transaction> outgoingTransactions;
 
     @OneToMany(mappedBy = "toAccount", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Transactions visibles seulement à l'écriture
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private List<Transaction> incomingTransactions;
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ← Credits visibles seulement à l'écriture
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private List<Credit> credits;
-
-
 }

@@ -4,8 +4,10 @@ import com.wallet.backend.dto.AuthResponse;
 import com.wallet.backend.dto.LoginRequest;
 import com.wallet.backend.dto.SignupRequest;
 import com.wallet.backend.service.AuthService;
+import com.wallet.backend.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,6 +17,9 @@ public class AuthController {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private JwtService jwtService; // Ajoutez cette dépendance
 
     @PostMapping("/signin")
     public ResponseEntity<AuthResponse> authenticate(@RequestBody LoginRequest loginRequest) {
@@ -47,7 +52,11 @@ public class AuthController {
     @PostMapping("/validate-token")
     public ResponseEntity<Boolean> validateToken(@RequestHeader("Authorization") String token) {
         try {
-            return ResponseEntity.ok(true);
+            if (token != null && token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+            boolean isValid = jwtService.validateToken(token);
+            return ResponseEntity.ok(isValid);
         } catch (Exception e) {
             return ResponseEntity.ok(false);
         }
