@@ -34,8 +34,9 @@ public class TransactionServiceImpl implements TransactionService {
         Account fromAccount = accountRepository.findById(fromAccountId)
                 .orElseThrow(() -> new RuntimeException("Compte émetteur non trouvé"));
 
+        // CORRECTION : Utiliser findByAccountNumber au lieu de existsByAccountNumber
         Account toAccount = accountRepository.findByAccountNumber(transferRequest.getRecipientRIB())
-                .orElseThrow(() -> new RuntimeException("Compte destinataire non trouvé"));
+                .orElseThrow(() -> new RuntimeException("Compte destinataire non trouvé avec le RIB: " + transferRequest.getRecipientRIB()));
 
         double amount = transferRequest.getAmount();
 
@@ -85,7 +86,6 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionRepository.findAll();
     }
 
-
     @Override
     public Map<String, List<Transaction>> getTransactionsByRibSeparated(Long rib) {
         List<Transaction> allTransactions = transactionRepository.findByFromAccount_AccountNumberOrToAccount_AccountNumber(rib, rib);
@@ -105,8 +105,6 @@ public class TransactionServiceImpl implements TransactionService {
 
         return result;
     }
-
-
 
     // ✅ NOUVELLE MÉTHODE POUR TransactionController
     public Transaction getTransactionById(Long id) {

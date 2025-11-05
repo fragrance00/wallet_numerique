@@ -29,6 +29,10 @@ public class ClientService {
         return clientRepository.save(client);
     }
 
+    public Optional<Client> findByEmail(String email) {
+        return clientRepository.findByEmail(email);
+    }
+
     public Client updateClient(Long id, Client updatedClient) {
         return clientRepository.findById(id)
                 .map(client -> {

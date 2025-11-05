@@ -24,28 +24,27 @@ public class CustomUserDetailsService implements UserDetailsService {
     private ClientRepository clientRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-
-        // Chercher d'abord dans Banker par EMAIL
-        Banker banker = bankerRepository.findByEmail(email).orElse(null);
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        // Chercher d'abord dans Banker
+        Banker banker = bankerRepository.findByUsername(username).orElse(null);
         if (banker != null) {
             return User.builder()
-                    .username(banker.getEmail()) // ⭐ Utilise l'email comme username Spring
-                    .password(banker.getPassword())
+                    .username(banker.getUsername())
+                    .password(banker.getPassword()) // ⚠️ CHANGEMENT : passwordHash → password
                     .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + banker.getRole())))
                     .build();
         }
 
-        // Si pas banker, chercher dans Client par EMAIL
-        Client client = clientRepository.findByEmail(email).orElse(null);
+        // Si pas banker, chercher dans Client
+        Client client = clientRepository.findByEmail(username).orElse(null);
         if (client != null) {
             return User.builder()
                     .username(client.getEmail())
-                    .password(client.getPassword())
+                    .password(client.getPassword()) // ⚠️ CHANGEMENT : passwordHash → password
                     .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_CLIENT")))
                     .build();
         }
 
-        throw new UsernameNotFoundException("User not found with email: " + email);
+        throw new UsernameNotFoundException("User not found: " + username);
     }
 }

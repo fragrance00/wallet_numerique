@@ -85,4 +85,58 @@ public class JwtService {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+
+    // AJOUTEZ CES MÉTHODES À VOTRE JwtService EXISTANT :
+
+    /**
+     * Génération avec claims supplémentaires
+     */
+    public String generateToken(String username, String userType, Long userId, Map<String, Object> extraClaims) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userType", userType);
+        claims.put("userId", userId);
+        claims.putAll(extraClaims); // Ajouter les claims supplémentaires
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(username)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    /**
+     * Extraire l'ID du compte
+     */
+    public Long extractAccountId(String token) {
+        return extractClaim(token, claims -> claims.get("accountId", Long.class));
+    }
+
+    /**
+     * Vérifier le type de token
+     */
+    public String extractTokenType(String token) {
+        return extractClaim(token, claims -> claims.get("tokenType", String.class));
+    }
+
+    /**
+     * Validation spécifique pour les tokens de compte
+     */
+    public boolean validateAccountToken(String token, String expectedEmail, Long expectedAccountId) {
+        try {
+            final String extractedUsername = extractUsername(token);
+            final Long extractedAccountId = extractAccountId(token);
+            final String tokenType = extractTokenType(token);
+
+            return extractedUsername.equals(expectedEmail) &&
+                    extractedAccountId != null &&
+                    extractedAccountId.equals(expectedAccountId) &&
+                    "ACCOUNT_ACCESS".equals(tokenType) &&
+                    !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

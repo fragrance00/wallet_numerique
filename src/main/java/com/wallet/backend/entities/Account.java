@@ -32,8 +32,7 @@ public class Account {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Banker banker;
 
-    // ⚠️ CHANGEMENT : passwordHash → password (stockage en clair)
-    private String password; // Maintenant en clair
+    private String password;
 
     @OneToMany(mappedBy = "fromAccount", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
@@ -46,4 +45,5 @@ public class Account {
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private List<Credit> credits;
+
 }
