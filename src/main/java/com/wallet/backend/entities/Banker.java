@@ -33,7 +33,7 @@ public class Banker {
     @Column(unique = true)
     private String username;
 
-    // ⚠️ CHANGEMENT : passwordHash → password (stockage en clair)
+    // ⚠️ CHANGEMENT : passwordHash → password (stockage en clair)0
     @NotNull
     private String password; // Maintenant en clair
 

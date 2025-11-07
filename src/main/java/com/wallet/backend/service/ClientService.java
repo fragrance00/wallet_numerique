@@ -29,8 +29,14 @@ public class ClientService {
         return clientRepository.save(client);
     }
 
-    public Optional<Client> findByEmail(String email) {
-        return clientRepository.findByEmail(email);
+    public Client updatePassword(Long clientId, String newPassword) {
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new RuntimeException("Client introuvable avec l'ID : " + clientId));
+
+        // Tu peux ici ajouter du hachage (recommandé)
+        client.setPassword(newPassword);
+
+        return clientRepository.save(client);
     }
 
     public Client updateClient(Long id, Client updatedClient) {
@@ -41,7 +47,6 @@ public class ClientService {
                     client.setEmail(updatedClient.getEmail());
                     client.setPhone(updatedClient.getPhone());
                     client.setAddress(updatedClient.getAddress());
-                    client.setPassword(updatedClient.getPassword()); // ⚠️ CHANGEMENT : ajoutez cette ligne
                     return clientRepository.save(client);
                 })
                 .orElseThrow(() -> new RuntimeException("Client non trouvé"));

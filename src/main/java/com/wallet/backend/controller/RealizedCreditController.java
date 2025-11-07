@@ -19,12 +19,11 @@ public class RealizedCreditController {
     private final RealizedCreditService realizedCreditService;
     private final BankerRepository bankerRepository;
 
-    @PostMapping("/create/{accountId}")
+    @PostMapping("/create")
     public ResponseEntity<GlobalResponse<RealizedCreditResponseDTO>> createRealizedCredit(
-            @PathVariable Long accountId,
             @Valid @RequestBody RealizedCreditRequestDTO request) {
 
-        RealizedCreditResponseDTO created = realizedCreditService.createCredit(request, accountId);
+        RealizedCreditResponseDTO created = realizedCreditService.createCredit(request);
         return ResponseEntity.ok(new GlobalResponse<>(true, "Crédit réalisé créé avec succès", created));
     }
 

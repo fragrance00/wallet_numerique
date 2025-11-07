@@ -25,6 +25,16 @@ public class BankerService {
                 .orElseThrow(() -> new RuntimeException("Banquier introuvable avec l'id: " + id));
     }
 
+    public Banker updatePassword(Long bankerId, String newPassword) {
+        Banker banker = bankerRepository.findById(bankerId)
+                .orElseThrow(() -> new RuntimeException("Banquier introuvable avec l'ID : " + bankerId));
+
+        // ⚠️ Ici, tu peux ajouter du hachage si tu veux sécuriser le mot de passe
+        banker.setPassword(newPassword);
+
+        return bankerRepository.save(banker);
+    }
+
     public Banker createBanker(Banker banker) {
         return bankerRepository.save(banker);
     }
@@ -33,10 +43,6 @@ public class BankerService {
         Banker existing = getBankerById(id);
         existing.setFirstName(updatedBanker.getFirstName());
         existing.setLastName(updatedBanker.getLastName());
-        existing.setEmail(updatedBanker.getEmail());
-        existing.setUsername(updatedBanker.getUsername());
-        existing.setPassword(updatedBanker.getPassword()); // ⚠️ CHANGEMENT : passwordHash → password
-        existing.setRole(updatedBanker.getRole()); // Ajoutez cette ligne
         return bankerRepository.save(existing);
     }
 

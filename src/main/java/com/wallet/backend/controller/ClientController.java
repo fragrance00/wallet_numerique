@@ -2,11 +2,14 @@ package com.wallet.backend.controller;
 
 import com.wallet.backend.entities.Client;
 import com.wallet.backend.service.ClientService;
+import com.wallet.backend.shared.GlobalResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/clients")
@@ -29,13 +32,42 @@ public class ClientController {
     }
 
     @PostMapping
-    public ResponseEntity<Client> createClient(@RequestBody Client client) {
-        return ResponseEntity.ok(clientService.createClient(client));
+    public ResponseEntity<GlobalResponse<Client>> createClient(@RequestBody Client client) {
+        Client saved = clientService.createClient(client);
+
+        GlobalResponse<Client> response = new GlobalResponse<>(
+                true,
+                "Client créé avec succès",
+                saved
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Client> updateClient(@PathVariable Long id, @RequestBody Client client) {
         return ResponseEntity.ok(clientService.updateClient(id, client));
+    }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<GlobalResponse<Client>> updatePassword(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+
+        String newPassword = request.get("newPassword");
+        if (newPassword == null || newPassword.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new GlobalResponse<>(false, "Le mot de passe ne peut pas être vide", null));
+        }
+
+        Client updatedClient = clientService.updatePassword(id, newPassword);
+        GlobalResponse<Client> response = new GlobalResponse<>(
+                true,
+                "Mot de passe modifié avec succès",
+                updatedClient
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
