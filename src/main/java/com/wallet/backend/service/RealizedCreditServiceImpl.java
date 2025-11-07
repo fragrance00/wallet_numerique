@@ -21,12 +21,10 @@ public class RealizedCreditServiceImpl implements RealizedCreditService {
     private final AccountRepository accountRepository;
 
     @Override
-    public RealizedCreditResponseDTO createCredit(RealizedCreditRequestDTO request, Long accountId) {
+    public RealizedCreditResponseDTO createCredit(RealizedCreditRequestDTO request) {
         Credit credit = creditRepository.findById(request.getCreditId())
                 .orElseThrow(() -> new ResourceNotFoundException("Crédit introuvable avec ID: " + request.getCreditId()));
 
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException("Compte introuvable avec ID: " + accountId));
 
         double amount = credit.getAmount();
         double interestRate = request.getInterestRate();
