@@ -29,6 +29,10 @@ public class ClientService {
         return clientRepository.save(client);
     }
 
+    public Optional<Client> findByEmail(String email) {
+        return clientRepository.findByEmail(email);
+    }
+
     public Client updatePassword(Long clientId, String newPassword) {
         Client client = clientRepository.findById(clientId)
                 .orElseThrow(() -> new RuntimeException("Client introuvable avec l'ID : " + clientId));

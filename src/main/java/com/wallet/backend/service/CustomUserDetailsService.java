@@ -26,7 +26,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // Chercher d'abord dans Banker
-        Banker banker = bankerRepository.findByUsername(username).orElse(null);
+        Banker banker = bankerRepository.findByEmail(username).orElse(null);
         if (banker != null) {
             return User.builder()
                     .username(banker.getUsername())
