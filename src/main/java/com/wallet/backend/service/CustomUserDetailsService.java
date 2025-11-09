@@ -24,9 +24,9 @@ public class CustomUserDetailsService implements UserDetailsService {
     private ClientRepository clientRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         // Chercher d'abord dans Banker
-        Banker banker = bankerRepository.findByEmail(username).orElse(null);
+        Banker banker = bankerRepository.findByEmail(email).orElse(null);
         if (banker != null) {
             return User.builder()
                     .username(banker.getUsername())
@@ -36,7 +36,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
 
         // Si pas banker, chercher dans Client
-        Client client = clientRepository.findByEmail(username).orElse(null);
+        Client client = clientRepository.findByEmail(email).orElse(null);
         if (client != null) {
             return User.builder()
                     .username(client.getEmail())
@@ -45,6 +45,6 @@ public class CustomUserDetailsService implements UserDetailsService {
                     .build();
         }
 
-        throw new UsernameNotFoundException("User not found: " + username);
+        throw new UsernameNotFoundException("User not found: " + email);
     }
 }

@@ -39,8 +39,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/h2-console").permitAll()
+
                         // 👑 SUPER_ADMIN peut tout faire
                         .requestMatchers("/api/bankers/**").hasAnyRole("SUPER_ADMIN", "BANKER")
                         // 👤 CLIENT accès limité
